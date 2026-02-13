@@ -51,23 +51,33 @@ class MashupProcessor:
         if progress_callback:
             progress_callback(f"🔍 Searching for {singer_name} videos...")
         
+       
         ydl_opts = {
-            'format': 'bestaudio/best',
-            'outtmpl': os.path.join(self.downloads_dir, '%(id)s.%(ext)s'),
-            'quiet': False,
-            'no_warnings': False,
-            'ignoreerrors': True,
-            'extract_flat': False,
-            'nocheckcertificate': True,
-            'geo_bypass': True,
-            'age_limit': None,
-            'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
-            }],
+    'format': 'bestaudio/best',
+    'outtmpl': os.path.join(self.downloads_dir, '%(id)s.%(ext)s'),
+    'quiet': True,
+    'no_warnings': True,
+    'ignoreerrors': True,
+    'retries': 10,
+    'fragment_retries': 10,
+    'skip_unavailable_fragments': True,
+    'geo_bypass': True,
+    'http_headers': {
+        'User-Agent': 'Mozilla/5.0'
+    },
+    'extractor_args': {
+        'youtube': {
+            'player_client': ['android'],
+            'skip': ['webpage']
         }
+    },
+    'postprocessors': [{
+        'key': 'FFmpegExtractAudio',
+        'preferredcodec': 'mp3',
+        'preferredquality': '192',
+    }],
+}
+
         
         search_query = f"{singer_name} official audio"
         

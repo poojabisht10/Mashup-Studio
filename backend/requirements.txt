@@ -1,3 +1,4 @@
+yt-dlp==2024.01.07
 setuptools
 wheel
 Flask==3.0.0
