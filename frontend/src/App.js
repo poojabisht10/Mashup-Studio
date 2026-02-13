@@ -2,9 +2,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "./App.css";
 
-import React, { useState, useEffect, useCallback } from "react";
-import "./App.css";
-
 function App() {
   const [formData, setFormData] = useState({
     singerName: "",
