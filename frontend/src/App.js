@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback } from "react";
 import "./App.css";
 
@@ -20,7 +19,9 @@ function App() {
   // API base URL
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-  // -------- API CALLS (defined BEFORE useEffect) --------
+  /* =========================
+     API FUNCTIONS (STABLE)
+     ========================= */
 
   const fetchStats = useCallback(async () => {
     try {
@@ -39,7 +40,7 @@ function App() {
         const data = await response.json();
         setJobStatus(data);
 
-        if (data.status === "completed") {
+        if (data && data.status === "completed") {
           setShowSuccess(true);
           setTimeout(() => {
             setJobId(null);
@@ -55,7 +56,9 @@ function App() {
     [API_URL, fetchStats],
   );
 
-  // -------- EFFECTS --------
+  /* =========================
+     EFFECTS
+     ========================= */
 
   useEffect(() => {
     fetchStats();
@@ -65,15 +68,15 @@ function App() {
 
   useEffect(() => {
     if (!jobId) return;
-
     const interval = setInterval(() => {
       fetchJobStatus(jobId);
     }, 3000);
-
     return () => clearInterval(interval);
   }, [jobId, fetchJobStatus]);
 
-  // -------- FORM HANDLERS --------
+  /* =========================
+     HANDLERS
+     ========================= */
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -82,9 +85,7 @@ function App() {
     try {
       const response = await fetch(`${API_URL}/api/create-mashup`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
@@ -110,7 +111,9 @@ function App() {
     }));
   };
 
-  // -------- UI (UNCHANGED) --------
+  /* =========================
+     UI
+     ========================= */
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
@@ -157,6 +160,74 @@ function App() {
           </div>
         </div>
       </header>
+
+      {/* Main */}
+      <main className="container mx-auto px-4 py-12">
+        {!jobId ? (
+          /* FORM */
+          <form
+            onSubmit={handleSubmit}
+            className="max-w-3xl mx-auto bg-white rounded-2xl shadow-2xl p-8 space-y-6"
+          >
+            <input
+              type="text"
+              name="singerName"
+              value={formData.singerName}
+              onChange={handleChange}
+              required
+              placeholder="Singer Name"
+              className="w-full px-4 py-3 rounded-xl border"
+            />
+
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              placeholder="Email"
+              className="w-full px-4 py-3 rounded-xl border"
+            />
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-xl font-bold"
+            >
+              {isSubmitting ? "Creating Mashup..." : "Create Mashup"}
+            </button>
+          </form>
+        ) : (
+          /* STATUS */
+          <div className="text-center py-12">
+            {showSuccess ? (
+              <h2 className="text-3xl font-bold text-green-600">
+                Success! Check your email 🎉
+              </h2>
+            ) : (
+              <>
+                <div className="text-4xl mb-4">
+                  {jobStatus && jobStatus.status === "processing" ? "🎵" : "⏳"}
+                </div>
+                <p className="text-lg text-gray-600">
+                  {jobStatus && jobStatus.message
+                    ? jobStatus.message
+                    : "Please wait..."}
+                </p>
+                <p className="text-sm mt-2 text-gray-500">
+                  Job ID: {typeof jobId === "string" ? jobId.slice(0, 8) : ""}
+                  ...
+                </p>
+              </>
+            )}
+          </div>
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer className="text-center text-gray-600 py-6">
+        Made with ❤️ using AI-powered audio processing
+      </footer>
     </div>
   );
 }
