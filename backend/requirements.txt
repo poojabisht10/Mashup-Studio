@@ -1,4 +1,7 @@
-yt-dlp==2023.12.30
+yt-dlp>=2024.03.10
+pydub
+certifi
+ffmpeg-python
 setuptools
 wheel
 Flask==3.0.0
