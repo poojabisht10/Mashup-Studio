@@ -19,9 +19,6 @@ function App() {
   // API base URL
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-  // API base URL
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-
   // 🔹 MOVE THESE FUNCTIONS UP 🔹
   const fetchStats = async () => {
     try {
