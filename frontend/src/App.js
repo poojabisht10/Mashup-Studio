@@ -16,31 +16,28 @@ function App() {
   const [stats, setStats] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // API base URL
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-  /* =========================
-     API FUNCTIONS (STABLE)
-     ========================= */
+  /* ===================== API ===================== */
 
   const fetchStats = useCallback(async () => {
     try {
-      const response = await fetch(`${API_URL}/api/stats`);
-      const data = await response.json();
+      const res = await fetch(`${API_URL}/api/stats`);
+      const data = await res.json();
       setStats(data);
-    } catch (error) {
-      console.error("Failed to fetch stats:", error);
+    } catch (e) {
+      console.error(e);
     }
   }, [API_URL]);
 
   const fetchJobStatus = useCallback(
     async (id) => {
       try {
-        const response = await fetch(`${API_URL}/api/job-status/${id}`);
-        const data = await response.json();
+        const res = await fetch(`${API_URL}/api/job-status/${id}`);
+        const data = await res.json();
         setJobStatus(data);
 
-        if (data && data.status === "completed") {
+        if (data?.status === "completed") {
           setShowSuccess(true);
           setTimeout(() => {
             setJobId(null);
@@ -49,55 +46,45 @@ function App() {
             fetchStats();
           }, 5000);
         }
-      } catch (error) {
-        console.error("Failed to fetch job status:", error);
+      } catch (e) {
+        console.error(e);
       }
     },
     [API_URL, fetchStats],
   );
 
-  /* =========================
-     EFFECTS
-     ========================= */
+  /* ===================== EFFECTS ===================== */
 
   useEffect(() => {
     fetchStats();
-    const interval = setInterval(fetchStats, 30000);
-    return () => clearInterval(interval);
+    const i = setInterval(fetchStats, 30000);
+    return () => clearInterval(i);
   }, [fetchStats]);
 
   useEffect(() => {
     if (!jobId) return;
-    const interval = setInterval(() => {
-      fetchJobStatus(jobId);
-    }, 3000);
-    return () => clearInterval(interval);
+    const i = setInterval(() => fetchJobStatus(jobId), 3000);
+    return () => clearInterval(i);
   }, [jobId, fetchJobStatus]);
 
-  /* =========================
-     HANDLERS
-     ========================= */
+  /* ===================== HANDLERS ===================== */
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/create-mashup`, {
+      const res = await fetch(`${API_URL}/api/create-mashup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setJobId(data.job_id);
-      } else {
-        alert(`Error: ${data.error}`);
-      }
-    } catch (error) {
-      alert(`Error: ${error.message}`);
+      const data = await res.json();
+      if (res.ok) setJobId(data.job_id);
+      else alert(data.error);
+    } catch (e) {
+      alert(e.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -105,127 +92,173 @@ function App() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
+    setFormData((p) => ({
+      ...p,
       [name]: type === "checkbox" ? checked : value,
     }));
   };
 
-  /* =========================
-     UI
-     ========================= */
+  /* ===================== UI ===================== */
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
-      {/* Header */}
+      {/* HEADER */}
       <header className="bg-white/80 backdrop-blur-lg border-b border-purple-100 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-2xl">🎵</span>
+        <div className="container mx-auto px-4 py-4 flex justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+              🎵
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-purple-600">
+                Mashup Studio
+              </h1>
+              <p className="text-sm text-gray-600">
+                Create Amazing Music Mashups
+              </p>
+            </div>
+          </div>
+
+          {stats && (
+            <div className="flex space-x-6 text-sm">
+              <div>
+                <div className="font-bold text-purple-600">
+                  {stats.total_jobs}
+                </div>
+                Total
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                  Mashup Studio
-                </h1>
-                <p className="text-sm text-gray-600">
-                  Create Amazing Music Mashups
-                </p>
+                <div className="font-bold text-green-600">
+                  {stats.completed}
+                </div>
+                Completed
+              </div>
+              <div>
+                <div className="font-bold text-blue-600">
+                  {stats.processing}
+                </div>
+                Processing
               </div>
             </div>
+          )}
+        </div>
+      </header>
 
-            {stats && (
-              <div className="hidden md:flex items-center space-x-6 text-sm">
-                <div className="text-center">
-                  <div className="font-bold text-purple-600 text-xl">
-                    {stats.total_jobs}
-                  </div>
-                  <div className="text-gray-600">Total</div>
+      {/* MAIN */}
+      <main className="container mx-auto px-4 py-12">
+        <div className="text-center mb-12">
+          <h2 className="text-5xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-pink-600 bg-clip-text text-transparent">
+            Create Your Perfect Mashup
+          </h2>
+          <p className="text-xl text-gray-600 mt-3">
+            Powered by AI-driven chorus detection and intelligent audio
+            processing
+          </p>
+        </div>
+
+        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4 text-white flex justify-center space-x-6 text-sm">
+            🎯 AI Chorus Detection ⚡ Lightning Fast 🎼 High Quality 📧 Email
+            Delivery
+          </div>
+
+          <div className="p-8">
+            {!jobId ? (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <input
+                  name="singerName"
+                  placeholder="Singer Name"
+                  value={formData.singerName}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border"
+                />
+
+                <input
+                  type="range"
+                  name="numVideos"
+                  min="10"
+                  max="50"
+                  value={formData.numVideos}
+                  onChange={handleChange}
+                />
+                <div className="text-sm">
+                  Number of Songs: {formData.numVideos}
                 </div>
-                <div className="text-center">
-                  <div className="font-bold text-green-600 text-xl">
-                    {stats.completed}
-                  </div>
-                  <div className="text-gray-600">Completed</div>
+
+                <input
+                  type="range"
+                  name="duration"
+                  min="20"
+                  max="60"
+                  value={formData.duration}
+                  onChange={handleChange}
+                />
+                <div className="text-sm">
+                  Duration per clip: {formData.duration}s
                 </div>
-                <div className="text-center">
-                  <div className="font-bold text-blue-600 text-xl">
-                    {stats.processing}
-                  </div>
-                  <div className="text-gray-600">Processing</div>
-                </div>
+
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border"
+                />
+
+                <label className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    name="intelligentExtraction"
+                    checked={formData.intelligentExtraction}
+                    onChange={handleChange}
+                  />
+                  <span>AI-powered chorus detection</span>
+                </label>
+
+                <button
+                  disabled={isSubmitting}
+                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 rounded-xl font-bold"
+                >
+                  {isSubmitting ? "Creating Mashup..." : "Create Mashup"}
+                </button>
+              </form>
+            ) : (
+              <div className="text-center py-12">
+                {showSuccess ? (
+                  <h3 className="text-3xl text-green-600 font-bold">
+                    Success! Check your email ✅
+                  </h3>
+                ) : (
+                  <>
+                    <div className="text-4xl mb-4">
+                      {jobStatus?.status === "processing" ? "🎵" : "⏳"}
+                    </div>
+                    <p>{jobStatus?.message || "Queued..."}</p>
+                    <p className="text-sm mt-2">
+                      Job ID: {jobId?.slice(0, 8)}...
+                    </p>
+                  </>
+                )}
               </div>
             )}
           </div>
         </div>
-      </header>
 
-      {/* Main */}
-      <main className="container mx-auto px-4 py-12">
-        {!jobId ? (
-          /* FORM */
-          <form
-            onSubmit={handleSubmit}
-            className="max-w-3xl mx-auto bg-white rounded-2xl shadow-2xl p-8 space-y-6"
-          >
-            <input
-              type="text"
-              name="singerName"
-              value={formData.singerName}
-              onChange={handleChange}
-              required
-              placeholder="Singer Name"
-              className="w-full px-4 py-3 rounded-xl border"
-            />
-
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              placeholder="Email"
-              className="w-full px-4 py-3 rounded-xl border"
-            />
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-xl font-bold"
-            >
-              {isSubmitting ? "Creating Mashup..." : "Create Mashup"}
-            </button>
-          </form>
-        ) : (
-          /* STATUS */
-          <div className="text-center py-12">
-            {showSuccess ? (
-              <h2 className="text-3xl font-bold text-green-600">
-                Success! Check your email 🎉
-              </h2>
-            ) : (
-              <>
-                <div className="text-4xl mb-4">
-                  {jobStatus && jobStatus.status === "processing" ? "🎵" : "⏳"}
-                </div>
-                <p className="text-lg text-gray-600">
-                  {jobStatus && jobStatus.message
-                    ? jobStatus.message
-                    : "Please wait..."}
-                </p>
-                <p className="text-sm mt-2 text-gray-500">
-                  Job ID: {typeof jobId === "string" ? jobId.slice(0, 8) : ""}
-                  ...
-                </p>
-              </>
-            )}
+        <div className="grid md:grid-cols-3 gap-6 mt-10">
+          <div className="bg-white p-6 rounded-xl shadow">
+            🎯 Smart Extraction
           </div>
-        )}
+          <div className="bg-white p-6 rounded-xl shadow">
+            ⚡ Fast Processing
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow">🎼 High Quality</div>
+        </div>
       </main>
 
-      {/* Footer */}
-      <footer className="text-center text-gray-600 py-6">
+      <footer className="text-center py-8 text-gray-600">
         Made with ❤️ using AI-powered audio processing
       </footer>
     </div>
