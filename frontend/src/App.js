@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import './App.css';
+import React, { useState, useEffect, useCallback } from "react";
+import "./App.css";
 
 function App() {
   const [formData, setFormData] = useState({
-    singerName: '',
+    singerName: "",
     numVideos: 20,
     duration: 30,
-    email: '',
-    intelligentExtraction: true
+    email: "",
+    intelligentExtraction: true,
   });
-  
+
   const [jobId, setJobId] = useState(null);
   const [jobStatus, setJobStatus] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,14 +17,14 @@ function App() {
   const [showSuccess, setShowSuccess] = useState(false);
 
   // API base URL
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   // Fetch stats
   useEffect(() => {
     fetchStats();
     const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchStats]);
 
   // Poll job status
   useEffect(() => {
@@ -34,53 +34,56 @@ function App() {
       }, 3000);
       return () => clearInterval(interval);
     }
-  }, [jobId]);
+  }, [jobId, fetchJobStatus]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await fetch(`${API_URL}/api/stats`);
       const data = await response.json();
       setStats(data);
     } catch (error) {
-      console.error('Failed to fetch stats:', error);
+      console.error("Failed to fetch stats:", error);
     }
-  };
+  }, [API_URL]);
 
-  const fetchJobStatus = async (id) => {
-    try {
-      const response = await fetch(`${API_URL}/api/job-status/${id}`);
-      const data = await response.json();
-      setJobStatus(data);
-      
-      if (data.status === 'completed') {
-        setShowSuccess(true);
-        setTimeout(() => {
-          setJobId(null);
-          setJobStatus(null);
-          setShowSuccess(false);
-          fetchStats();
-        }, 5000);
+  const fetchJobStatus = useCallback(
+    async (id) => {
+      try {
+        const response = await fetch(`${API_URL}/api/job-status/${id}`);
+        const data = await response.json();
+        setJobStatus(data);
+
+        if (data.status === "completed") {
+          setShowSuccess(true);
+          setTimeout(() => {
+            setJobId(null);
+            setJobStatus(null);
+            setShowSuccess(false);
+            fetchStats();
+          }, 5000);
+        }
+      } catch (error) {
+        console.error("Failed to fetch job status:", error);
       }
-    } catch (error) {
-      console.error('Failed to fetch job status:', error);
-    }
-  };
+    },
+    [API_URL, fetchStats],
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
       const response = await fetch(`${API_URL}/api/create-mashup`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
-      
+
       const data = await response.json();
-      
+
       if (response.ok) {
         setJobId(data.job_id);
       } else {
@@ -95,9 +98,9 @@ function App() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -115,22 +118,30 @@ function App() {
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                   Mashup Studio
                 </h1>
-                <p className="text-sm text-gray-600">Create Amazing Music Mashups</p>
+                <p className="text-sm text-gray-600">
+                  Create Amazing Music Mashups
+                </p>
               </div>
             </div>
-            
+
             {stats && (
               <div className="hidden md:flex items-center space-x-6 text-sm">
                 <div className="text-center">
-                  <div className="font-bold text-purple-600 text-xl">{stats.total_jobs}</div>
+                  <div className="font-bold text-purple-600 text-xl">
+                    {stats.total_jobs}
+                  </div>
                   <div className="text-gray-600">Total</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-bold text-green-600 text-xl">{stats.completed}</div>
+                  <div className="font-bold text-green-600 text-xl">
+                    {stats.completed}
+                  </div>
                   <div className="text-gray-600">Completed</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-bold text-blue-600 text-xl">{stats.processing}</div>
+                  <div className="font-bold text-blue-600 text-xl">
+                    {stats.processing}
+                  </div>
                   <div className="text-gray-600">Processing</div>
                 </div>
               </div>
@@ -147,7 +158,8 @@ function App() {
             Create Your Perfect Mashup
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Powered by AI-driven chorus detection and intelligent audio processing
+            Powered by AI-driven chorus detection and intelligent audio
+            processing
           </p>
         </div>
 
@@ -263,7 +275,8 @@ function App() {
                           <span>AI-Powered Chorus Detection</span>
                         </div>
                         <p className="text-sm text-gray-600 mt-1">
-                          Automatically finds and extracts the best parts of each song
+                          Automatically finds and extracts the best parts of
+                          each song
                         </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -287,9 +300,24 @@ function App() {
                   >
                     {isSubmitting ? (
                       <span className="flex items-center justify-center space-x-2">
-                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="animate-spin h-5 w-5"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
                         <span>Creating Mashup...</span>
                       </span>
@@ -309,8 +337,12 @@ function App() {
                       <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
                         <span className="text-5xl">✅</span>
                       </div>
-                      <h3 className="text-3xl font-bold text-green-600 mb-2">Success!</h3>
-                      <p className="text-gray-600">Check your email for the mashup!</p>
+                      <h3 className="text-3xl font-bold text-green-600 mb-2">
+                        Success!
+                      </h3>
+                      <p className="text-gray-600">
+                        Check your email for the mashup!
+                      </p>
                     </div>
                   ) : (
                     <>
@@ -318,21 +350,26 @@ function App() {
                         <div className="absolute inset-0 border-8 border-purple-200 rounded-full"></div>
                         <div className="absolute inset-0 border-8 border-purple-600 rounded-full border-t-transparent animate-spin"></div>
                         <div className="absolute inset-0 flex items-center justify-center text-3xl">
-                          {jobStatus?.status === 'processing' ? '🎵' : '⏳'}
+                          {jobStatus?.status === "processing" ? "🎵" : "⏳"}
                         </div>
                       </div>
-                      
+
                       <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                        {jobStatus?.status === 'processing' ? 'Creating Your Mashup' : 'Queued'}
+                        {jobStatus?.status === "processing"
+                          ? "Creating Your Mashup"
+                          : "Queued"}
                       </h3>
-                      
+
                       <p className="text-lg text-gray-600 mb-6">
-                        {jobStatus?.message || 'Please wait...'}
+                        {jobStatus?.message || "Please wait..."}
                       </p>
-                      
+
                       <div className="bg-gray-100 rounded-xl p-4 inline-block">
                         <p className="text-sm text-gray-600">
-                          Job ID: <span className="font-mono font-semibold">{jobId.slice(0, 8)}...</span>
+                          Job ID:{" "}
+                          <span className="font-mono font-semibold">
+                            {jobId.slice(0, 8)}...
+                          </span>
                         </p>
                       </div>
                     </>
@@ -348,10 +385,11 @@ function App() {
               <div className="text-4xl mb-3">🎯</div>
               <h4 className="font-bold text-gray-800 mb-2">Smart Extraction</h4>
               <p className="text-sm text-gray-600">
-                AI analyzes each song to extract the most memorable chorus sections
+                AI analyzes each song to extract the most memorable chorus
+                sections
               </p>
             </div>
-            
+
             <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
               <div className="text-4xl mb-3">⚡</div>
               <h4 className="font-bold text-gray-800 mb-2">Fast Processing</h4>
@@ -359,7 +397,7 @@ function App() {
                 Optimized audio processing delivers your mashup in minutes
               </p>
             </div>
-            
+
             <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
               <div className="text-4xl mb-3">🎼</div>
               <h4 className="font-bold text-gray-800 mb-2">High Quality</h4>
@@ -374,11 +412,10 @@ function App() {
       {/* Footer */}
       <footer className="bg-white/80 backdrop-blur-lg border-t border-purple-100 mt-20">
         <div className="container mx-auto px-4 py-8 text-center text-gray-600">
-          <p className="mb-2">
-            Made with ❤️ using AI-powered audio processing
-          </p>
+          <p className="mb-2">Made with ❤️ using AI-powered audio processing</p>
           <p className="text-sm">
-            Featuring: Intelligent Chorus Detection • High-Quality Audio • Email Delivery
+            Featuring: Intelligent Chorus Detection • High-Quality Audio • Email
+            Delivery
           </p>
         </div>
       </footer>
