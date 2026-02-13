@@ -19,9 +19,7 @@ function App() {
   // API base URL
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-  /* =======================
-     API FUNCTIONS
-     ======================= */
+  // -------- API CALLS (defined BEFORE useEffect) --------
 
   const fetchStats = useCallback(async () => {
     try {
@@ -56,9 +54,7 @@ function App() {
     [API_URL, fetchStats],
   );
 
-  /* =======================
-     EFFECTS
-     ======================= */
+  // -------- EFFECTS --------
 
   useEffect(() => {
     fetchStats();
@@ -76,9 +72,7 @@ function App() {
     return () => clearInterval(interval);
   }, [jobId, fetchJobStatus]);
 
-  /* =======================
-     HANDLERS
-     ======================= */
+  // -------- FORM HANDLERS --------
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -87,7 +81,9 @@ function App() {
     try {
       const response = await fetch(`${API_URL}/api/create-mashup`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(formData),
       });
 
@@ -113,9 +109,7 @@ function App() {
     }));
   };
 
-  /* =======================
-     UI (UNCHANGED)
-     ======================= */
+  // -------- UI (UNCHANGED) --------
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
