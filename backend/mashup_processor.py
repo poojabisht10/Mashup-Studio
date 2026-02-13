@@ -5,8 +5,17 @@ from pydub.effects import normalize
 import librosa
 import numpy as np
 from yt_dlp import YoutubeDL
+import ssl
+import certifi
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
+os.environ['SSL_CERT_FILE'] = certifi.where()
+os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
+
 import tempfile
 import shutil
+
 
 class MashupProcessor:
     def __init__(self, working_dir):
