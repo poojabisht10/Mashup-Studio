@@ -19,24 +19,11 @@ function App() {
   // API base URL
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-  // Fetch stats
-  useEffect(() => {
-    fetchStats();
-    const interval = setInterval(fetchStats, 30000);
-    return () => clearInterval(interval);
-  }, [fetchStats]);
+  // API base URL
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-  // Poll job status
-  useEffect(() => {
-    if (jobId) {
-      const interval = setInterval(() => {
-        fetchJobStatus(jobId);
-      }, 3000);
-      return () => clearInterval(interval);
-    }
-  }, [jobId, fetchJobStatus]);
-
-  const fetchStats = useCallback(async () => {
+  // 🔹 MOVE THESE FUNCTIONS UP 🔹
+  const fetchStats = async () => {
     try {
       const response = await fetch(`${API_URL}/api/stats`);
       const data = await response.json();
@@ -44,30 +31,43 @@ function App() {
     } catch (error) {
       console.error("Failed to fetch stats:", error);
     }
-  }, [API_URL]);
+  };
 
-  const fetchJobStatus = useCallback(
-    async (id) => {
-      try {
-        const response = await fetch(`${API_URL}/api/job-status/${id}`);
-        const data = await response.json();
-        setJobStatus(data);
+  const fetchJobStatus = async (id) => {
+    try {
+      const response = await fetch(`${API_URL}/api/job-status/${id}`);
+      const data = await response.json();
+      setJobStatus(data);
 
-        if (data.status === "completed") {
-          setShowSuccess(true);
-          setTimeout(() => {
-            setJobId(null);
-            setJobStatus(null);
-            setShowSuccess(false);
-            fetchStats();
-          }, 5000);
-        }
-      } catch (error) {
-        console.error("Failed to fetch job status:", error);
+      if (data.status === "completed") {
+        setShowSuccess(true);
+        setTimeout(() => {
+          setJobId(null);
+          setJobStatus(null);
+          setShowSuccess(false);
+          fetchStats();
+        }, 5000);
       }
-    },
-    [API_URL, fetchStats],
-  );
+    } catch (error) {
+      console.error("Failed to fetch job status:", error);
+    }
+  };
+
+  // 🔹 NOW useEffect is allowed 🔹
+  useEffect(() => {
+    fetchStats();
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (jobId) {
+      const interval = setInterval(() => {
+        fetchJobStatus(jobId);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [jobId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
